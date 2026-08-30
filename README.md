@@ -55,12 +55,13 @@ git push
 ## 资产再生成命令
 
 ```powershell
-# 托管 PDF（file:// 打开时页面自动把二维码编码为演示长链接，打印件不依赖本站在线）
-# 如需指定二维码内容，可在地址后加 #qr=<encodeURIComponent(链接)>
-& "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --headless=new --disable-gpu --no-pdf-header-footer --virtual-time-budget=12000 --print-to-pdf="E:\Ingulf\简历\netlify-resume\resume-zhangkun.pdf" "file:///E:/Ingulf/简历/netlify-resume/index.html"
+# 托管 PDF —— 必须从线上站点生成（#noanim 跳过动画）：
+# 这样 4 处演示链接与二维码都是 https://z-k.netlify.app/demo 绝对地址，永久跟随 DEMO_URL 变量
+& "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --headless=new --disable-gpu --no-pdf-header-footer --virtual-time-budget=20000 --print-to-pdf="E:\Ingulf\简历\netlify-resume\resume-zhangkun.pdf" "https://z-k.netlify.app/#noanim"
 ```
 
-- 本地 `file://` 预览时，演示链接与二维码自动回退到 `index.html` 脚本里的 `DEMO_FALLBACK` 常量（换长链接时顺手同步它）
+- ⚠️ 不要用 `file://` 本地路径生成 PDF：那会把演示长链接硬编码进文件，改变量后 PDF 就成旧链接了
+- 本地 `file://` 预览时，演示链接与二维码自动回退到 `index.html` 脚本里的 `DEMO_FALLBACK` 常量（仅供本地预览，换长链接时顺手同步）
 - `index.html#noanim` 跳过入场动画直接呈现最终状态（供爬虫/存档/测试用）
 - `og:image` 目前是相对路径，绑定自定义域名后建议改为绝对 URL，微信/LinkedIn 预览更稳
 - 需要纸质版：打开网页 → 页脚「打印 / 导出PDF」，或直接下载 `resume-zhangkun.pdf`
