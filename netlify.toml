@@ -1,3 +1,13 @@
+[build]
+  functions = "netlify/functions"
+
+# /demo → 演示跳转函数（302 到环境变量 DEMO_URL，后台改变量即生效，无需重新部署）
+[[redirects]]
+  from = "/demo"
+  to = "/.netlify/functions/demo"
+  status = 200
+  force = true
+
 [[headers]]
   for = "/*"
   [headers.values]

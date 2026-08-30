@@ -573,7 +573,15 @@ body {
   background: #fff; border: 1px solid var(--slate-200);
   border-radius: var(--radius-sm); padding: 8px 8px 5px;
 }
-.qr-box img { width: 86px; height: 86px; display: block; }
+.qr-box #qr { width: 86px; height: 86px; }
+.qr-box img, .qr-box canvas { width: 86px !important; height: 86px !important; display: block; }
+.qr-hint {
+  width: 86px; height: 86px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: var(--slate-400); text-align: center;
+  border: 1px dashed var(--slate-200); border-radius: 4px; padding: 8px;
+  box-sizing: border-box;
+}
 .qr-box figcaption { font-size: 10px; color: var(--slate-500); margin-top: 3px; font-weight: 500; }
 @media (max-width: 640px) {
   .demo-box { flex-direction: column; align-items: flex-start; }
@@ -671,6 +679,8 @@ body {
   .summary-text { font-size: 12px; line-height: 1.7; }
   .eval-card { font-size: 12px; line-height: 1.8; }
   .demo-box { break-inside: avoid; }
+  /* 打印件里 PDF 版二维码编码的是长链接（模块密），放大提高扫码成功率 */
+  .qr-box img, .qr-box canvas { width: 106px !important; height: 106px !important; }
 }
 </style>
 </head>
@@ -686,7 +696,7 @@ body {
       <a href="#projects">项目</a>
     </div>
     <div class="nav-actions">
-      <a class="nav-demo" href="https://z-k.up.railway.app/apps/index.html#company_id=QDZK&token=QPVocIJJ0BYPK0-zrt8qI0rpO2talkI6iw_URvTIRhw" target="_blank" rel="noopener">
+      <a class="nav-demo" href="/demo" target="_blank" rel="noopener">
         <span class="dot"></span>在线演示
       </a>
       <a href="resume-zhangkun.pdf" target="_blank" rel="noopener" class="nav-download">
@@ -722,7 +732,7 @@ body {
             青岛 · 李沧区
           </a>
         </div>
-        <a class="hero-demo" href="https://z-k.up.railway.app/apps/index.html#company_id=QDZK&token=QPVocIJJ0BYPK0-zrt8qI0rpO2talkI6iw_URvTIRhw" target="_blank" rel="noopener">
+        <a class="hero-demo" href="/demo" target="_blank" rel="noopener">
           <span class="dot"></span>
           自研智能询价系统 · 点击在线演示
         </a>
@@ -997,14 +1007,14 @@ body {
           <div class="demo-box-title">在线演示说明</div>
           <div class="demo-box-text">演示环境已录入 <b>三菱 / 长合 WN 刀片型号、OSG EX 系列产品</b>测试数据（面价统一设为 100），并完整保留专业版功能：<b>折扣设置、库存查询、三菱库存实时查询</b>等，打开即可实际操作体验。</div>
           <div class="demo-actions">
-            <a class="btn-demo" href="https://z-k.up.railway.app/apps/index.html#company_id=QDZK&token=QPVocIJJ0BYPK0-zrt8qI0rpO2talkI6iw_URvTIRhw" target="_blank" rel="noopener">
+            <a class="btn-demo" href="/demo" target="_blank" rel="noopener">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
               打开在线演示系统
             </a>
           </div>
         </div>
         <figure class="qr-box">
-          <img src="qr-demo.svg" alt="智能询价系统在线演示二维码">
+          <div id="qr"></div>
           <figcaption>扫码手机打开</figcaption>
         </figure>
       </div>
@@ -1060,7 +1070,7 @@ body {
     <div class="footer-links">
       <a href="tel:18863995420">18863995420</a>
       <a href="mailto:k2991314@163.com">k2991314@163.com</a>
-      <a href="https://z-k.up.railway.app/apps/index.html#company_id=QDZK&token=QPVocIJJ0BYPK0-zrt8qI0rpO2talkI6iw_URvTIRhw" target="_blank" rel="noopener">智能询价系统 · 在线演示</a>
+      <a href="/demo" target="_blank" rel="noopener">智能询价系统 · 在线演示</a>
       <a href="javascript:window.print()">打印 / 导出PDF</a>
     </div>
     <p>张坤 · 刀具销售工程师 · 山东区域市场 · 求职简历</p>
@@ -1068,7 +1078,16 @@ body {
   </div>
 </footer>
 
+<script src="qrcode.min.js"></script>
 <script>
+// 演示链接：生产环境统一走 /demo（Netlify Function 302 → 环境变量 DEMO_URL，
+// 改链接只需在 Netlify 后台改变量，无需改代码重新部署）。
+// 本地 file:// 预览时回退到真实链接；换链接时同步更新这一个常量即可。
+const DEMO_FALLBACK = 'https://z-k.up.railway.app/apps/index.html#company_id=QDZK&token=QPVocIJJ0BYPK0-zrt8qI0rpO2talkI6iw_URvTIRhw';
+if (location.protocol === 'file:') {
+  document.querySelectorAll('a[href="/demo"]').forEach(a => { a.href = DEMO_FALLBACK; });
+}
+
 // Sticky nav shadow
 const nav = document.getElementById('nav');
 window.addEventListener('scroll', () => {
@@ -1183,6 +1202,17 @@ window.addEventListener('beforeprint', () => {
     el.innerHTML = target + '<span class="unit">' + unit + '</span>';
   });
 });
+
+// 二维码：编码「本站域名/demo」，与线上跳转目标始终一致（改 DEMO_URL 无需维护二维码）。
+// #qr=<url> 可强制覆盖（本地重新导出托管 PDF 时使用）。
+(function () {
+  const box = document.getElementById('qr');
+  if (!box || typeof QRCode === 'undefined') return;
+  const m = location.hash.match(/qr=([^&]+)/);
+  const text = m ? decodeURIComponent(m[1])
+             : (location.protocol.indexOf('http') === 0 ? location.origin + '/demo' : DEMO_FALLBACK);
+  new QRCode(box, { text: text, width: 86, height: 86, colorDark: '#0B1526', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+})();
 </script>
 </body>
 </html>

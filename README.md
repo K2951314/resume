@@ -6,12 +6,25 @@
 
 | 文件 | 用途 |
 |------|------|
-| `index.html` | 简历正文（内容、样式、脚本全内联，单文件自包含） |
+| `index.html` | 简历正文（内容、样式、脚本全内联） |
 | `resume-zhangkun.pdf` | 托管的 PDF 版（导航「下载PDF」直链此文件，方便 HR 转发） |
-| `qr-demo.svg` | 智能询价系统演示链接的二维码（项目卡内，屏幕可扫、打印可扫） |
+| `netlify/functions/demo.mjs` | `/demo` 跳转函数：302 → 环境变量 `DEMO_URL`（**换演示链接只改变量，不用重新部署**） |
+| `qrcode.min.js` | 二维码生成库（页面加载时现场生成，编码「本站域名/demo」） |
 | `og-image.png` | 微信 / 社交平台分享链接时的预览图 |
 | `404.html` | 访问不存在路径时自动跳回简历 |
-| `netlify.toml` | Netlify 缓存与安全响应头配置 |
+| `netlify.toml` | Netlify 函数目录、`/demo` 跳转规则、缓存与安全响应头 |
+
+## 更换演示链接（无需重新部署）★
+
+页面里所有演示入口都指向站内 `/demo`，由函数实时 302 到环境变量 `DEMO_URL`：
+
+1. Netlify 后台 → 你的 site → **Site configuration → Environment variables**
+2. 添加/修改变量：Key = `DEMO_URL`，Value = 完整演示链接（含 token），Scope 勾选 **Functions**
+3. 保存即生效（函数每次被调用时实时读取）；极少数情况下未生效，去 Deploys 页随手 Trigger deploy 一次
+
+二维码编码的是「本站域名/demo」，同样跟随变量，**永不因换 token 而失效**。仅当网站域名本身变化时才需要重新生成托管 PDF（见下）。
+
+首次部署后必做：Netlify 后台配置 `DEMO_URL`，否则 `/demo` 会返回设置提示。
 
 ## 日常更新流程
 
@@ -42,17 +55,13 @@ git push
 ## 资产再生成命令
 
 ```powershell
-# PDF（改完 index.html 后重新导出，覆盖 netlify-resume\resume-zhangkun.pdf 及本地副本）
+# 托管 PDF（file:// 打开时页面自动把二维码编码为演示长链接，打印件不依赖本站在线）
+# 如需指定二维码内容，可在地址后加 #qr=<encodeURIComponent(链接)>
 & "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" --headless=new --disable-gpu --no-pdf-header-footer --virtual-time-budget=12000 --print-to-pdf="E:\Ingulf\简历\netlify-resume\resume-zhangkun.pdf" "file:///E:/Ingulf/简历/netlify-resume/index.html"
-
-# 演示二维码（演示链接含 token，换 token 后必须重新生成并替换 qr-demo.svg）
-python -c "import qrcode,qrcode.image.svg; qrcode.make('新链接', image_factory=qrcode.image.svg.SvgPathImage, box_size=20, border=2).save(r'netlify-resume\qr-demo.svg')"
 ```
 
-## 备注
-
-- `index.html#noanim` 可跳过入场动画直接呈现最终状态（供爬虫/存档/测试用）
-- 演示链接（含 token）出现在 4 处 + `qr-demo.svg`，更换时全局替换
+- 本地 `file://` 预览时，演示链接与二维码自动回退到 `index.html` 脚本里的 `DEMO_FALLBACK` 常量（换长链接时顺手同步它）
+- `index.html#noanim` 跳过入场动画直接呈现最终状态（供爬虫/存档/测试用）
 - `og:image` 目前是相对路径，绑定自定义域名后建议改为绝对 URL，微信/LinkedIn 预览更稳
 - 需要纸质版：打开网页 → 页脚「打印 / 导出PDF」，或直接下载 `resume-zhangkun.pdf`
 
